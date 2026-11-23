@@ -24,19 +24,18 @@ Because the magnetic flux `B` is defined as the discrete exterior derivative of 
 
 ## 2. Repository Layout
 
-    ├── src/
-    │   ├── mhd_variational_integrator.f90   # Mesh builder, DEC operators, Hodge stars, and midpoint solver
-    │   └── main_sphere_alfven.f90           # Initialization, time-stepping driver, and diagnostic output
-    ├── paper/
-    │   └── main.tex                         # Full mathematical write-up (Overleaf-ready LaTeX)
-    ├── .gitignore
+    ├── mhd_variational_integrator.f90   # Mesh builder, DEC operators, Hodge stars, and midpoint solver
+    ├── main_sphere_alfven.f90           # Initialization, time-stepping driver, and diagnostic output
+    ├── main_tex.pdf                     # Full mathematical write-up (compiled PDF)
+    ├── .gitignore                       # Ignores compiled object, module, and executable binaries
+    ├── LICENSE                          # MIT License
     └── README.md
 
 ---
 
 ## 3. Code Architecture & Walkthrough
 
-### A. `src/mhd_variational_integrator.f90`
+### A. `mhd_variational_integrator.f90`
 
 This module contains the entire geometric engine and time-stepping solver in contiguous, `allocatable` Fortran 2018 arrays with zero external dependencies:
 
@@ -66,16 +65,16 @@ This module contains the entire geometric engine and time-stepping solver in con
 
 ---
 
-### B. `src/main_sphere_alfven.f90`
+### B. `main_sphere_alfven.f90`
 
 The main driver initializes a smooth spherical harmonic-like perturbation on the unit icosahedron and integrates it forward in time:
 
-- **Initial Conditions:** Sets uniform reference density `ρ_ref = 1.0`, sound speed `c_s = 1.0`, magnetic permeability `μ₀ = 1.0`, a divergence-free tangent velocity perturbation (`u_e`) from a vertex streamfunction, and a non-trivial edge magnetic potential (`A_e`) so `B = d₁ A` starts non-zero with exact zero net flux (`∑ B_f = 0`).
-- **Diagnostic Monitoring:** At regular step intervals, prints:
-  - `||B - d₁ A||_∞` — Exact closure error (verifies machine-zero topological constraint).
-  - `∑ B_f` and `∑ m_f` — Global magnetic flux and total mass conservation.
-  - `E_kin`, `E_mag`, `E_int`, `E_tot` — Kinetic, normal magnetic, and isothermal free energy breakdown.
-  - `iters` and `residual` — Nonlinear midpoint solver convergence health.
+- **Initial Conditions:** Sets uniform reference density `ρ_ref = 1.0`, sound speed `c_s = 0.2`, magnetic permeability `μ₀ = 1.0`, a divergence-free tangent velocity perturbation (`u_e`) from a vertex streamfunction, and a non-trivial edge magnetic potential (`A_e`) so `B = d₁ A` starts non-zero with exact zero net flux (`∑ B_f = 0`).
+- **Diagnostic Monitoring:** At every 10th step (`nout = 10` up to `nsteps = 100` with `dt = 1.0e-3`), prints:
+  - `exact_B_error` (`||B - d₁ A||_∞`) — Exact closure error (verifies machine-zero topological constraint).
+  - `total_flux` (`∑ B_f`) and `total_mass` (`∑ m_f`) — Global magnetic flux and total mass conservation.
+  - `kinetic`, `magnetic`, `internal` — Kinetic, normal magnetic, and isothermal free energy breakdown.
+  - `iterations` and `residual` — Nonlinear midpoint solver convergence health.
 
 ---
 
@@ -84,7 +83,7 @@ The main driver initializes a smooth spherical harmonic-like perturbation on the
 Requires `gfortran` (GCC 9+ with Fortran 2018 support). From the root directory:
 
     gfortran -std=f2018 -O2 -Wall -Wextra -fcheck=all \
-      src/mhd_variational_integrator.f90 src/main_sphere_alfven.f90 \
+      mhd_variational_integrator.f90 main_sphere_alfven.f90 \
       -o sphere_mhd
 
     ./sphere_mhd
@@ -119,6 +118,5 @@ The discrete differential geometry and variational fluid transport structures us
    - Kraus, M., Kormann, K., Morrison, P. J., & Sonnendrücker, E. (2017). *GEMPIC: Geometric Electromagnetic Particle-in-Cell Methods*. Journal of Plasma Physics, 83(4).
    *(Establishes exact magnetic flux preservation via potential formulations `B = d₁ A` and variational coupling between fluid advection and Lorentz forces.)*
 
-## credits 
-
-- lol me 
+## Credits
+- lol me
