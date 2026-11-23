@@ -118,5 +118,30 @@ The discrete differential geometry and variational fluid transport structures us
    - Kraus, M., Kormann, K., Morrison, P. J., & Sonnendrücker, E. (2017). *GEMPIC: Geometric Electromagnetic Particle-in-Cell Methods*. Journal of Plasma Physics, 83(4).
    *(Establishes exact magnetic flux preservation via potential formulations `B = d₁ A` and variational coupling between fluid advection and Lorentz forces.)*
 
+## also quick diagram
+
+```mermaid
+flowchart TD
+    subgraph Init["1. Geometric & Cochain Setup (S²)"]
+        M["build_icosphere<br/>|V|=12, |E|=30, |F|=20"] --> H["build_hodge_stars<br/>⋆₀ (vertex), ⋆₁ᵇᵃʳʸ (edge), ⋆₂ (face)"]
+        H --> IC["initialize_state<br/>u ∈ C¹(K), A ∈ C¹(K), m ∈ C²(K)"]
+    end
+
+    subgraph Step["2. Midpoint Picard Loop (advance_step, max 80 iters)"]
+        MID["Midpoint State (k + 1/2)<br/>ū = ½(uⁿ + uⁿ⁺¹), m̄ = ½(mⁿ + mⁿ⁺¹)"]
+        MID --> ADV["Discrete Lie Transport<br/>mⁿ⁺¹ = mⁿ - Δt·d₁(ι_ū m̄)<br/>Aⁿ⁺¹ = Aⁿ - Δt·(ι_ū B̄)"]
+        ADV --> BEX["Exact Magnetic Flux<br/>Bⁿ⁺¹ = d₁ Aⁿ⁺¹  (∑ B_f = 0)"]
+        BEX --> RHS["compute_momentum_rhs<br/>Convective (u⊥_e) + Pressure (-d₀ q_v)"]
+        RHS --> UPD["Damped Velocity Update<br/>uⁿ⁺¹ ← (1-ω)uⁿ⁺¹ + ω(uⁿ - Δt·⋆₁⁻¹ RHS)"]
+        UPD --> CHK{"Residual < 1e-10?"}
+        CHK -- "No (iter < 80)" --> MID
+    end
+
+    IC --> MID
+    CHK -- "Yes (or explicit fallback)" --> DIAG["diagnostics<br/>||B - d₁A||_∞, ∑B_f, ∑m_f, E_kin, E_mag, E_int"]
+```
+
+yes i learnt mermaid because i felt bad...
+
 ## Credits
 - lol me
